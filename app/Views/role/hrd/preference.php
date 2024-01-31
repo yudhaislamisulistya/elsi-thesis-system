@@ -147,7 +147,14 @@
                     </div>
                     <div class="form-group">
                         <label for="tipePreferensi">Tipe Preferensi</label>
-                        <input type="text" class="form-control" id="tipePreferensi" name="tipePreferensi" placeholder="Enter preference name">
+                        <select name="tipePreferensi" id="tipePreferensi" class="form-control">
+                            <option value="Kriteria Biasa">Kriteria Biasa - Tipe 1</option>
+                            <option value="Kriteria Quasi">Kriteria Quasi - Tipe 2</option>
+                            <option value="Kriteria Linier">Kriteria Linier - Tipe 3</option>
+                            <option value="Kriteria Level">Kriteria Level - Tipe 4</option>
+                            <option value="Kriteria Linier & Area Indifference">Kriteria Linier & Area Indifference - Tipe 5</option>
+                            <option value="Kriteria Gaussian">Kriteria Gaussian - Tipe 6</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="target">Target</label>
@@ -197,7 +204,14 @@
                     </div>
                     <div class="form-group">
                         <label for="editTipePreferensi">Tipe Preferensi</label>
-                        <input type="text" class="form-control" id="editTipePreferensi" name="editTipePreferensi" placeholder="Enter preference name">
+                        <select name="editTipePreferensi" id="editTipePreferensi" class="form-control">
+                            <option value="Kriteria Biasa">Kriteria Biasa - Tipe 1</option>
+                            <option value="Kriteria Quasi">Kriteria Quasi - Tipe 2</option>
+                            <option value="Kriteria Linier">Kriteria Linier - Tipe 3</option>
+                            <option value="Kriteria Level">Kriteria Level - Tipe 4</option>
+                            <option value="Kriteria Linier & Area Indifference">Kriteria Linier & Area Indifference - Tipe 5</option>
+                            <option value="Kriteria Gaussian">Kriteria Gaussian - Tipe 6</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="editTarget">Target</label>

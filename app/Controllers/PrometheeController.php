@@ -8,6 +8,10 @@ use App\Models\ModelCandidateRankings;
 use App\Models\ModelPreferences;
 use App\Models\ModelSubParameterCandidates;
 use App\Models\ModelSubParameters;
+use Exception;
+
+set_time_limit(360); // Mengatur batas waktu eksekusi menjadi 120 detik
+ini_set('memory_limit', '512M'); // Mengatur batas memori menjadi 512 MB
 
 class PrometheeController extends BaseController
 {
@@ -81,13 +85,33 @@ class PrometheeController extends BaseController
         }
 
         $prometheeData = [];
+        // Menghitung standar deviasi untuk setiap sub parameter
+        $standarDeviasiData = [];
+        foreach ($arraySubParameterCode as $subParameterCode) {
+            $sumValuePM = 0;
+            foreach ($uniqueCandidateCodeFromSubParameterCandidates as $candidateA) {
+                foreach ($uniqueCandidateCodeFromSubParameterCandidates as $candidateB) {
+                    if ($candidateA['candidate_code'] !== $candidateB['candidate_code']) {
+                        $valuePM = $this->calculatePreferenceValue($candidateA['candidate_code'], $candidateB['candidate_code'], $subParameterCode);
+                        $sumValuePM += $valuePM;
+                    }
+                }
+            }
+            // Asumsikan Anda memiliki jumlah data untuk setiap subParameterCode yang akan dibagi untuk menemukan rata-rata
+            $averageValuePM = $sumValuePM / (count($uniqueCandidateCodeFromSubParameterCandidates) * (count($uniqueCandidateCodeFromSubParameterCandidates) - 1));
+            // Menyimpan standar deviasi untuk subParameterCode
+            $standarDeviasiData[$subParameterCode] = $averageValuePM;
+        }
+
+        // Sekarang kita mempunyai standar deviasi, perbarui loop untuk menggunakan standar deviasi ini
         foreach ($arraySubParameterCode as $subParameterCode) {
             foreach ($uniqueCandidateCodeFromSubParameterCandidates as $candidateA) {
                 foreach ($uniqueCandidateCodeFromSubParameterCandidates as $candidateB) {
                     if ($candidateA['candidate_code'] !== $candidateB['candidate_code']) {
                         $valuePM = $this->calculatePreferenceValue($candidateA['candidate_code'], $candidateB['candidate_code'], $subParameterCode);
-
-                        $d = $this->calculateD($valuePM, $subParameterCode);
+                        // Mengambil standar deviasi untuk subParameterCode yang bersangkutan
+                        $standarDeviasi = $standarDeviasiData[$subParameterCode];
+                        $d = $this->calculateD($valuePM, $subParameterCode, $standarDeviasi);
                         $preferenceIndex = $this->calculatePreferenceIndex($d, $subParameterCode);
 
                         $prometheeData[$subParameterCode][$candidateA['candidate_code']][$candidateB['candidate_code']] = [
@@ -99,6 +123,7 @@ class PrometheeController extends BaseController
                 }
             }
         }
+
 
         $totalPreferenceIndices = [];
 
@@ -199,6 +224,7 @@ class PrometheeController extends BaseController
         $q = $data['start_bound_q'];
         $p = $data['end_bound_p'];
 
+
         if ($data['sub_parameter_type'] == 'Kriteria Linier') {
             if ($valuePM <= 0) {
                 $d = 0;
@@ -217,6 +243,26 @@ class PrometheeController extends BaseController
             }
         } else if ($data['sub_parameter_type'] == 'Kriteria Biasa') {
             $d = ($valuePM <= 0) ? 0 : 1;
+        } else if ($data['sub_parameter_type'] == 'Kriteria Quasi') {
+            $d = ($valuePM <= $q) ? 0 : 1;
+        } else if ($data['sub_parameter_type'] == 'Kriteria Linier & Area Indifference') {
+            if ($valuePM <= $q) {
+                $d = 0;
+            } elseif ($valuePM <= $p) {
+                $d = ($valuePM - $q) / ($p - $q);
+            } else {
+                $d = 1;
+            }
+        } else if ($data['sub_parameter_type'] == 'Kriteria Gaussian') {
+            if ($valuePM <= 0) {
+                $d = 0;
+            } else {
+                if ($data['standar_deviasi'] == 0) {
+                    $data['standar_deviasi'] = 7.1518;
+                }
+
+                $d = 1 - exp(-pow($valuePM, 2) / (2 * pow($data['standar_deviasi'], 2)));
+            }
         }
         return $d;
     }
